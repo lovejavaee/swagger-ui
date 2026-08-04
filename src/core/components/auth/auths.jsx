@@ -35,9 +35,7 @@ export default class Auths extends React.Component {
     e.preventDefault()
 
     let { authActions, definitions } = this.props
-    let auths = definitions.map( (val, key) => {
-      return key
-    }).toArray()
+    let auths = definitions.keySeq().toArray()
 
     this.setState(auths.reduce((prev, auth) => {
       prev[auth] = ""
@@ -83,13 +81,14 @@ export default class Auths extends React.Component {
                   onAuthChange={this.onAuthChange}
                   authorized={authorized}
                   errSelectors={errSelectors}
+                  authSelectors={authSelectors}
                   />
-              }).toArray()
+              }).valueSeq().toArray()
             }
             <div className="auth-btn-wrapper">
               {
-                nonOauthDefinitions.size === authorizedAuth.size ? <Button className="btn modal-btn auth" onClick={ this.logoutClick }>Logout</Button>
-              : <Button type="submit" className="btn modal-btn auth authorize">Authorize</Button>
+                nonOauthDefinitions.size === authorizedAuth.size ? <Button className="btn modal-btn auth" onClick={ this.logoutClick } aria-label="Remove authorization">Logout</Button>
+              : <Button type="submit" className="btn modal-btn auth authorize" aria-label="Apply credentials">Authorize</Button>
               }
               <Button className="btn modal-btn auth btn-done" onClick={ this.close }>Close</Button>
             </div>
@@ -111,7 +110,7 @@ export default class Auths extends React.Component {
                             name={ name } />
                   </div>)
                 }
-                ).toArray()
+                ).valueSeq().toArray()
             }
           </div> : null
         }

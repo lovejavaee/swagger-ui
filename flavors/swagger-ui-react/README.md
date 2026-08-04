@@ -10,12 +10,30 @@ It has a few differences from the main version of Swagger UI:
 
 Versions of this module mirror the version of Swagger UI included in the distribution.
 
+## Anonymized analytics
+
+`swagger-ui-react` uses [Scarf](https://scarf.sh/) to collect [anonymized installation analytics](https://github.com/scarf-sh/scarf-js?tab=readme-ov-file#as-a-user-of-a-package-using-scarf-js-what-information-does-scarf-js-send-about-me). These analytics help support the maintainers of this library and ONLY run during installation. To [opt out](https://github.com/scarf-sh/scarf-js?tab=readme-ov-file#as-a-user-of-a-package-using-scarf-js-how-can-i-opt-out-of-analytics), you can set the `scarfSettings.enabled` field to `false` in your project's `package.json`:
+
+```
+// package.json
+{
+  // ...
+  "scarfSettings": {
+    "enabled": false
+  }
+  // ...
+}
+```
+
+Alternatively, you can set the environment variable `SCARF_ANALYTICS` to `false` as part of the environment that installs your npm packages, e.g., `SCARF_ANALYTICS=false npm install`.
+
+
 ## Quick start
 
 Install `swagger-ui-react`:
 
 ```
-$ npm i --save swagger-ui-react
+$ npm install swagger-ui-react
 ```
 
 Use it in your React application:
@@ -33,7 +51,7 @@ These props map to [Swagger UI configuration options](https://github.com/swagger
 
 #### `spec`: PropTypes.object
 
-An OpenAPI document respresented as a JavaScript object, JSON string, or YAML string for Swagger UI to display.
+An OpenAPI document represented as a JavaScript object, JSON string, or YAML string for Swagger UI to display.
 
 ⚠️ Don't use this in conjunction with `url` - unpredictable behavior may occur.
 
@@ -176,6 +194,19 @@ Redirect url given as parameter to the oauth2 provider. Default the url refers t
 
 ⚠️ This prop is currently only applied once, on mount. Changes to this prop's value will not be propagated to the underlying Swagger UI instance. A future version of this module will remove this limitation, and the change will not be considered a breaking change.
 
+#### `initialState`: PropTypes.object
+
+Passes initial values to the Swagger UI state.
+
+⚠️ This prop is currently only applied once, on mount. Changes to this prop's value will not be propagated to the underlying Swagger UI instance. A future version of this module will remove this limitation, and the change will not be considered a breaking change.
+
+
+#### `uncaughtExceptionHandler`: PropTypes.func
+
+Allows to define a custom uncaught exception handler. The default is `null`, which means that the default handler will be used. 
+The default handler will log the error to the console.
+
+⚠️ This prop is currently only applied once, on mount. Changes to this prop's value will not be propagated to the underlying Swagger UI instance. A future version of this module will remove this limitation, and the change will not be considered a breaking change.
 
 
 ## Limitations
@@ -184,7 +215,6 @@ Redirect url given as parameter to the oauth2 provider. Default the url refers t
 * Some props are only applied on mount, and cannot be updated reliably.
 * OAuth redirection handling is not supported.
 * Topbar/Standalone mode is not supported.
-* Custom plugins are not supported.
 
 We intend to address these limitations based on user demand, so please open an issue or pull request if you have a specific request.
 

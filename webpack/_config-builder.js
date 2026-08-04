@@ -2,14 +2,14 @@
  * @prettier
  */
 
-import path from "path"
-import deepExtend from "deep-extend"
-import webpack from "webpack"
-import TerserPlugin from "terser-webpack-plugin"
-import nodeExternals from "webpack-node-externals"
+const path = require("path")
+const deepExtend = require("deep-extend")
+const webpack = require("webpack")
+const TerserPlugin = require("terser-webpack-plugin")
+const nodeExternals = require("webpack-node-externals")
 
-import { getRepoInfo } from "./_helpers"
-import pkg from "../package.json"
+const { getRepoInfo, getDevtool } = require("./_helpers")
+const pkg = require("../package.json")
 
 const projectBasePath = path.join(__dirname, "../")
 
@@ -26,16 +26,21 @@ const baseRules = [
       cacheDirectory: true,
     },
   },
-  { test: /\.(txt|yaml)$/,
+  {
+    test: /\.(txt|yaml)$/,
     type: "asset/source",
   },
   {
-    test: /\.(png|jpg|jpeg|gif|svg)$/,
+    test: /\.svg$/,
+    use: ["@svgr/webpack"],
+  },
+  {
+    test: /\.(png|jpg|jpeg|gif)$/,
     type: "asset/inline",
   },
 ]
 
-export default function buildConfig(
+function buildConfig(
   {
     minimize = true,
     mangle = true,
@@ -49,7 +54,7 @@ export default function buildConfig(
   var plugins = [
     new webpack.DefinePlugin({
       buildInfo: JSON.stringify({
-        PACKAGE_VERSION: pkg.version,
+        PACKAGE_VERSION: process.env.REACT_APP_VERSION ?? pkg.version,
         GIT_COMMIT: gitInfo.hash,
         GIT_DIRTY: gitInfo.dirty,
         BUILD_TIME: new Date().toUTCString(),
@@ -78,11 +83,10 @@ export default function buildConfig(
           // when esm, library.name should be unset, so do not define here
           // when esm, library.export should be unset, so do not define here
           type: "umd",
-        }
+        },
       },
 
       target: "web",
-
 
       module: {
         rules: baseRules,
@@ -92,51 +96,65 @@ export default function buildConfig(
         ? {
             esprima: "esprima",
           }
-        : [nodeExternals({
-          importType: (moduleName) => {
-            return `commonjs ${moduleName}`
-          }})],
+        : [
+            nodeExternals({
+              importType: (moduleName) => {
+                return `commonjs ${moduleName}`
+              },
+            }),
+          ],
       resolve: {
         modules: [path.join(projectBasePath, "./src"), "node_modules"],
         extensions: [".web.js", ".js", ".jsx", ".json", ".less"],
         alias: {
           // these aliases make sure that we don't bundle same libraries twice
           // when the versions of these libraries diverge between swagger-js and swagger-ui
-          "@babel/runtime-corejs3": path.resolve(__dirname, "..", "node_modules/@babel/runtime-corejs3"),
+          "@babel/runtime-corejs3": path.resolve(
+            __dirname,
+            "..",
+            "node_modules/@babel/runtime-corejs3"
+          ),
           "js-yaml": path.resolve(__dirname, "..", "node_modules/js-yaml"),
-          "lodash": path.resolve(__dirname, "..", "node_modules/lodash"),
+          lodash: path.resolve(__dirname, "..", "node_modules/lodash"),
           "react-is": path.resolve(__dirname, "..", "node_modules/react-is"),
-          "safe-buffer": path.resolve(__dirname, "..", "node_modules/safe-buffer"),
+          "safe-buffer": path.resolve(
+            __dirname,
+            "..",
+            "node_modules/safe-buffer"
+          ),
         },
         fallback: {
           fs: false,
           stream: require.resolve("stream-browserify"),
+          buffer: require.resolve("buffer"),
         },
       },
 
-      // If we're mangling, size is a concern -- so use trace-only sourcemaps
-      // Otherwise, provide heavy souremaps suitable for development
-      devtool: sourcemaps
-        ? minimize
-          ? "nosources-source-map"
-          : "cheap-module-source-map"
-        : false,
+      devtool: getDevtool(sourcemaps, minimize),
 
       performance: {
         hints: "error",
-        maxEntrypointSize: 1153434,
-        maxAssetSize: 1153434,
+        maxEntrypointSize: 13312000,
+        maxAssetSize: 133312000,
       },
 
       optimization: {
         minimize: !!minimize,
         minimizer: [
-          compiler =>
+          (compiler) =>
             new TerserPlugin({
               terserOptions: {
+                sourceMap: sourcemaps,
                 mangle: !!mangle,
+                keep_classnames:
+                  !customConfig.mode || customConfig.mode === "production",
+                keep_fnames:
+                  !customConfig.mode || customConfig.mode === "production",
+                output: {
+                  comments: false,
+                },
               },
-            }).apply(compiler)
+            }).apply(compiler),
         ],
       },
     },
@@ -148,3 +166,5 @@ export default function buildConfig(
 
   return completeConfig
 }
+
+module.exports = buildConfig
